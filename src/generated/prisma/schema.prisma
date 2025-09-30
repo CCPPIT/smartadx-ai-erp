@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// User model
+model User {
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  name                    String?
+  role                    String                   @default("USER")
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  campaigns               Campaign[]
+  ads                     Ad[]
+  posts                   Post[]
+  comments                Comment[]
+  notifications           Notification[]
+  invoices                Invoice[]
+  payments                Payment[]
+  aiChats                 AIChat[]
+  aiGeneratedContents     AIGeneratedContent[]
+  socialMediaIntegrations SocialMediaIntegration[]
+  reports                 Report[]
+  preference              UserPreference?
+  clients                 Client[]
+  rewards                 Reward[]
+}
+
+// Campaign model
+model Campaign {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  status      String      @default("DRAFT")
+  budget      Float?
+  startDate   DateTime?
+  endDate     DateTime?
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  ads         Ad[]
+  analytics   Analytics[]
+  posts       Post[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// Ad model
+model Ad {
+  id          String   @id @default(cuid())
+  title       String
+  content     String?
+  imageUrl    String?
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  status      String   @default("ACTIVE")
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Analytics model
+model Analytics {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  conversions Int      @default(0)
+  revenue     Float    @default(0)
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Client model
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  phone     String?
+  company   String?
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  invoices  Invoice[]
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Post model for social media scheduling
+model Post {
+  id          String    @id @default(cuid())
+  content     String
+  imageUrl    String?
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  status      String    @default("DRAFT") // DRAFT, SCHEDULED, PUBLISHED, FAILED
+  platform    String // facebook, twitter, instagram, linkedin, etc.
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Comment model for social media interactions
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id])
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Notification model for real-time alerts
+model Notification {
+  id         String   @id @default(cuid())
+  title      String
+  message    String
+  type       String // info, warning, success, error
+  read       Boolean  @default(false)
+  priority   Int      @default(0) // 0: low, 1: medium, 2: high
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  entityId   String? // ID of the related entity
+  entityType String? // Type of the related entity
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// AI Chat model for AI assistant conversations
+model AIChat {
+  id        String          @id @default(cuid())
+  title     String
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  messages  AIChatMessage[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+// AI Chat Message model
+model AIChatMessage {
+  id        String   @id @default(cuid())
+  content   String
+  role      String // user, assistant
+  chatId    String
+  chat      AIChat   @relation(fields: [chatId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// AI Generated Content model
+model AIGeneratedContent {
+  id        String   @id @default(cuid())
+  type      String // ad, post, image_description, etc.
+  prompt    String
+  content   String
+  imageUrl  String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  entityId  String? // ID of the related entity (ad, post, etc.)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Invoice model
+model Invoice {
+  id        String        @id @default(cuid())
+  number    String        @unique
+  clientId  String?
+  client    Client?       @relation(fields: [clientId], references: [id])
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id])
+  amount    Float
+  status    String        @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE, CANCELLED
+  dueDate   DateTime?
+  items     InvoiceItem[]
+  payments  Payment[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+// Invoice Item model
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  description String
+  quantity    Int
+  price       Float
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Payment model
+model Payment {
+  id        String   @id @default(cuid())
+  amount    Float
+  currency  String   @default("USD")
+  method    String? // credit_card, paypal, bank_transfer, etc.
+  status    String   @default("PENDING") // PENDING, COMPLETED, FAILED, REFUNDED
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Social Media Integration model
+model SocialMediaIntegration {
+  id           String    @id @default(cuid())
+  platform     String // facebook, twitter, instagram, linkedin, etc.
+  accessToken  String
+  refreshToken String?
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// Report model for exporting reports
+model Report {
+  id        String   @id @default(cuid())
+  title     String
+  type      String // campaign_performance, client_summary, financial, etc.
+  format    String // PDF, CSV, Excel, etc.
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  filters   String? // JSON string of applied filters
+  data      String? // JSON string of report data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// User Preference model for dark/light mode and other settings
+model UserPreference {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id])
+  theme              String   @default("light") // light, dark
+  language           String   @default("en") // en, ar, etc.
+  timezone           String   @default("UTC")
+  notifications      Boolean  @default(true)
+  emailNotifications Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// Reward model for creator rewards
+model Reward {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  points      Int       @default(0)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  claimedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
