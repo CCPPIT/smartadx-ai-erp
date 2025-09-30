@@ -23,7 +23,10 @@ import {
   Star,
   Zap,
   Layers,
-  TrendingUp
+  TrendingUp,
+  FileText,
+  Wand2,
+  Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,12 +89,100 @@ const menuItems = [
     description: "تصميم بالذكاء الاصطناعي"
   },
   {
+    id: "ai-ads",
+    label: "توليد الإعلانات AI",
+    icon: Wand2,
+    badge: "جديد",
+    gradient: "from-purple-500 to-pink-600",
+    description: "إعلانات ذكية مولدة تلقائيًا"
+  },
+  {
+    id: "market-trends",
+    label: "تحليل السوق",
+    icon: TrendingUp,
+    badge: "AI",
+    gradient: "from-blue-500 to-cyan-600",
+    description: "تحليل ترندات السوق الآلي"
+  },
+  {
+    id: "smart-targeting",
+    label: "الاستهداف الذكي",
+    icon: Target,
+    badge: "ذكي",
+    gradient: "from-indigo-500 to-purple-600",
+    description: "توصيات استهداف متقدمة"
+  },
+  {
+    id: "ai-copywriting",
+    label: "النصوص الدعائية AI",
+    icon: FileText,
+    badge: "جديد",
+    gradient: "from-purple-500 to-pink-600",
+    description: "مولد النصوص الذكي"
+  },
+  {
+    id: "competitor-analysis",
+    label: "تحليل المنافسين",
+    icon: Users,
+    badge: "تحليل",
+    gradient: "from-blue-500 to-indigo-600",
+    description: "مراقبة المنافسين تلقائيًا"
+  },
+  {
     id: "automation",
     label: "الأتمتة الذكية",
     icon: Zap,
     badge: "Beta",
     gradient: "from-yellow-500 to-orange-600",
     description: "جدولة وأتمتة متقدمة"
+  },
+  {
+    id: "notifications",
+    label: "الإشعارات",
+    icon: Bell,
+    badge: "3",
+    gradient: "from-red-500 to-pink-600",
+    description: "إدارة الإشعارات"
+  },
+  {
+    id: "billing",
+    label: "الفواتير",
+    icon: DollarSign,
+    badge: null,
+    gradient: "from-green-500 to-emerald-600",
+    description: "إدارة المدفوعات"
+  },
+  {
+    id: "reports",
+    label: "التقارير",
+    icon: FileText,
+    badge: "5",
+    gradient: "from-blue-500 to-indigo-600",
+    description: "تقارير وتحليلات"
+  },
+  {
+    id: "rewards",
+    label: "المكافآت",
+    icon: Gift,
+    badge: "جديد",
+    gradient: "from-yellow-500 to-orange-600",
+    description: "نظام المكافآت للمبدعين"
+  },
+  {
+    id: "search",
+    label: "البحث",
+    icon: Search,
+    badge: "AI",
+    gradient: "from-purple-500 to-pink-600",
+    description: "بحث ذكي مع اقتراحات"
+  },
+  {
+    id: "settings",
+    label: "الإعدادات",
+    icon: Settings,
+    badge: null,
+    gradient: "from-gray-500 to-slate-600",
+    description: "تخصيص النظام"
   }
 ];
 
