@@ -14,7 +14,12 @@ import {
   Megaphone,
   Palette,
   Calendar,
-  DollarSign
+  DollarSign,
+  FileText,
+  Bell,
+  Gift,
+  Search,
+  Wand2
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +31,23 @@ import MobileTabBar from "@/components/layout/MobileTabBar";
 import StatsCards from "@/components/dashboard/StatsCards";
 import CampaignOverview from "@/components/dashboard/CampaignOverview";
 import AIInsights from "@/components/dashboard/AIInsights";
+import RealtimeCampaigns from "@/components/dashboard/RealtimeCampaigns";
+
+import CampaignsPage from "./campaigns/page";
+import ClientsPage from "./clients/page";
+import AIPage from "./ai/page";
+import DesignPage from "./design/page";
+import AutomationPage from "./automation/page";
+import NotificationsPage from "./notifications/page";
+import BillingPage from "./billing/page";
+import ReportsPage from "./reports/page";
+import RewardsPage from "./rewards/page";
+import SearchPage from "./search/page";
+import AIAdsPage from "./ai-ads/page";
+import MarketTrendsPage from "./market-trends/page";
+import SmartTargetingPage from "./smart-targeting/page";
+import AICopywritingPage from "./ai-copywriting/page";
+import CompetitorAnalysisPage from "./competitor-analysis/page";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -77,7 +99,7 @@ export default function Dashboard() {
             </div>
           </motion.header>
 
-          {/* Dashboard Content */}
+          {/* Page Content */}
           <main className="p-6 pb-20 lg:pb-6">
             {activeTab === "dashboard" && (
               <div className="space-y-8">
@@ -119,6 +141,9 @@ export default function Dashboard() {
 
                 {/* Stats Cards */}
                 <StatsCards />
+
+                {/* Real-time Campaigns */}
+                <RealtimeCampaigns />
 
                 {/* Quick Actions */}
                 <motion.div
@@ -176,156 +201,23 @@ export default function Dashboard() {
               </div>
             )}
 
-            {activeTab === "campaigns" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <Card className="glass-morphism border-white/20">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">الحملات الإعلانية</CardTitle>
-                    <CardDescription>إدارة وتتبع جميع حملاتك الإعلانية</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-16">
-                      <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-pink-500 to-rose-600 rounded-3xl flex items-center justify-center">
-                        <Megaphone className="w-10 h-10 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">قريباً - إدارة الحملات الإعلانية</h3>
-                      <p className="text-muted-foreground">نظام متقدم لإدارة وتتبع حملاتك الإعلانية</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {activeTab === "analytics" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <Card className="glass-morphism border-white/20">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">التحليلات والتقارير</CardTitle>
-                    <CardDescription>مراقبة أداء حملاتك بالذكاء الاصطناعي</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-16">
-                      <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl flex items-center justify-center">
-                        <BarChart3 className="w-10 h-10 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">قريباً - تحليلات متقدمة بالذكاء الاصطناعي</h3>
-                      <p className="text-muted-foreground">رؤى عميقة وتقارير ذكية لحملاتك</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {activeTab === "clients" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <Card className="glass-morphism border-white/20">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">إدارة العملاء</CardTitle>
-                    <CardDescription>نظام CRM متكامل لإدارة علاقات العملاء</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-16">
-                      <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl flex items-center justify-center">
-                        <Users className="w-10 h-10 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">قريباً - نظام إدارة العملاء الذكي</h3>
-                      <p className="text-muted-foreground">CRM متطور لإدارة علاقات العملاء</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {activeTab === "ai" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <Card className="glass-morphism border-white/20">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">مساعد الذكاء الاصطناعي</CardTitle>
-                    <CardDescription>أدوات الذكاء الاصطناعي المتقدمة</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-16">
-                      <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl flex items-center justify-center animate-pulse">
-                        <Brain className="w-10 h-10 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">قريباً - مساعد الذكاء الاصطناعي الشامل</h3>
-                      <p className="text-muted-foreground">مساعد ذكي متطور لجميع احتياجاتك</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {activeTab === "design" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <Card className="glass-morphism border-white/20">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">استوديو التصميم</CardTitle>
-                    <CardDescription>تصميم الإعلانات بالذكاء الاصطناعي</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-16">
-                      <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl flex items-center justify-center">
-                        <Palette className="w-10 h-10 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">قريباً - استوديو التصميم الذكي</h3>
-                      <p className="text-muted-foreground">إنشاء تصاميم احترافية بالذكاء الاصطناعي</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {activeTab === "automation" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <Card className="glass-morphism border-white/20">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">الأتمتة الذكية</CardTitle>
-                    <CardDescription>جدولة وأتمتة الحملات الإعلانية</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-16">
-                      <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl flex items-center justify-center">
-                        <Zap className="w-10 h-10 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">قريباً - نظام الأتمتة الذكية</h3>
-                      <p className="text-muted-foreground">أتمتة كاملة لحملاتك الإعلانية</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
+            {activeTab === "campaigns" && <CampaignsPage />}
+            {activeTab === "clients" && <ClientsPage />}
+            {activeTab === "ai" && <AIPage />}
+            {activeTab === "design" && <DesignPage />}
+            {activeTab === "automation" && <AutomationPage />}
+            {activeTab === "notifications" && <NotificationsPage />}
+            {activeTab === "billing" && <BillingPage />}
+            {activeTab === "reports" && <ReportsPage />}
+            {activeTab === "rewards" && <RewardsPage />}
+            {activeTab === "search" && <SearchPage />}
+            {activeTab === "ai-ads" && <AIAdsPage />}
+            {activeTab === "market-trends" && <MarketTrendsPage />}
+            {activeTab === "smart-targeting" && <SmartTargetingPage />}
+            {activeTab === "ai-copywriting" && <AICopywritingPage />}
+            {activeTab === "competitor-analysis" && <CompetitorAnalysisPage />}
           </main>
         </div>
-      </div>
-
-      {/* Mobile Tab Bar */}
-      <div className="lg:hidden">
-        <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
     </div>
   );

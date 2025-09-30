@@ -175,3 +175,5 @@ netlify/
 
 # Local History for Visual Studio Code
 .history/
+
+/src/generated/prisma
