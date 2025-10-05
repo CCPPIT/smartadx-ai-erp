@@ -2,24 +2,13 @@ import { z } from 'zod'
 import { publicProcedure, router } from '@/lib/trpc'
 
 export const notificationRouter = router({
-  getAll: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.prisma.notification.findMany({
-      include: {
-        user: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
-  }),
-  
-  getByUserId: publicProcedure
-    .input(z.string())
+  getAll: publicProcedure
+    .input(z.object({
+      limit: z.number().optional().default(20)
+    }))
     .query(async ({ ctx, input }) => {
-      return await ctx.prisma.notification.findMany({
-        where: {
-          userId: input,
-        },
+      const notifications = await ctx.prisma.notification.findMany({
+        take: input.limit,
         include: {
           user: true,
         },
@@ -27,15 +16,28 @@ export const notificationRouter = router({
           createdAt: 'desc',
         },
       })
+      
+      // Transform to match expected format
+      return notifications.map(notif => ({
+        id: notif.id,
+        title: notif.title,
+        message: notif.message,
+        type: notif.type,
+        priority: notif.priority,
+        read: notif.read,
+        timestamp: notif.createdAt,
+        userId: notif.userId,
+        entityId: notif.entityId,
+        entityType: notif.entityType
+      }))
     }),
-    
-  getUnreadByUserId: publicProcedure
+  
+  getByUserId: publicProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
       return await ctx.prisma.notification.findMany({
         where: {
           userId: input,
-          read: false,
         },
         include: {
           user: true,
@@ -107,11 +109,11 @@ export const notificationRouter = router({
     }),
     
   markAsRead: publicProcedure
-    .input(z.string())
+    .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return await ctx.prisma.notification.update({
         where: {
-          id: input,
+          id: input.id,
         },
         data: {
           read: true,
@@ -120,11 +122,9 @@ export const notificationRouter = router({
     }),
     
   markAllAsRead: publicProcedure
-    .input(z.string())
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx }) => {
       return await ctx.prisma.notification.updateMany({
         where: {
-          userId: input,
           read: false,
         },
         data: {
@@ -134,11 +134,11 @@ export const notificationRouter = router({
     }),
     
   delete: publicProcedure
-    .input(z.string())
+    .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return await ctx.prisma.notification.delete({
         where: {
-          id: input,
+          id: input.id,
         },
       })
     }),

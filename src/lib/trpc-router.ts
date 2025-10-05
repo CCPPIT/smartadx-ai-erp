@@ -1,4 +1,5 @@
 import { router } from './trpc'
+import { dashboardRouter } from '@/server/routers/dashboard'
 import { campaignRouter } from '@/app/api/trpc/routers/campaigns'
 import { analyticsRouter } from '@/app/api/trpc/routers/analytics'
 import { clientRouter } from '@/app/api/trpc/routers/clients'
@@ -21,6 +22,7 @@ import { aiCopywritingRouter } from '@/app/api/trpc/routers/aiCopywriting'
 import { aiAdRouter } from '@/app/api/trpc/routers/aiAds'
 
 export const appRouter = router({
+  dashboard: dashboardRouter,
   campaign: campaignRouter,
   analytics: analyticsRouter,
   client: clientRouter,

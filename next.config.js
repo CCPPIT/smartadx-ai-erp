@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins: ["*.preview.same-app.com"],
+  // Enable standalone output for Docker
+  output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   images: {
     unoptimized: true,
     domains: [
@@ -31,6 +33,16 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+  },
+  // Webpack configuration
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push({
+        'utf-8-validate': 'commonjs utf-8-validate',
+        'bufferutil': 'commonjs bufferutil',
+      });
+    }
+    return config;
   },
 };
 

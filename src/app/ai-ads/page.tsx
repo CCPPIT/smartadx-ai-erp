@@ -46,7 +46,48 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { toast } from "sonner"
+import { useToast } from "@/components/ui/use-toast";
+
+// Define the AIGeneratedContent interface
+interface AIGeneratedContent {
+  id: string;
+  type: string;
+  prompt: string;
+  content: string;
+  imageUrl?: string | null;
+  userId: string;
+  entityId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  user?: {
+    id: string;
+    email: string;
+    name?: string;
+    role: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+interface Platform {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface Format {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  prompt: string;
+  category: string;
+}
 
 export default function AIAdsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,19 +95,19 @@ export default function AIAdsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
-  const [viewingAd, setViewingAd] = useState<any>(null);
-  const [testingAd, setTestingAd] = useState<any>(null);
+  const [viewingAd, setViewingAd] = useState<AIGeneratedContent | null>(null);
+  const [testingAd, setTestingAd] = useState<AIGeneratedContent | null>(null);
   const [newAd, setNewAd] = useState({
     prompt: "",
     platform: "facebook",
     format: "image",
   });
   
+  const { toast } = useToast();
   const { data: ads, isLoading, refetch } = trpc.aiAd.getAll.useQuery();
   const { data: platforms } = trpc.aiAd.getPlatforms.useQuery();
   const { data: formats } = trpc.aiAd.getFormats.useQuery();
   const { data: templates } = trpc.aiAd.getTemplates.useQuery();
-//   const {toast}=useToast()
   
   // Generate ad mutation
   const generateAdMutation = trpc.aiAd.generate.useMutation({
@@ -182,12 +223,12 @@ export default function AIAdsPage() {
     });
   };
   
-  const openViewDialog = (ad: any) => {
+  const openViewDialog = (ad: AIGeneratedContent) => {
     setViewingAd(ad);
     setIsViewDialogOpen(true);
   };
   
-  const openTestDialog = (ad: any) => {
+  const openTestDialog = (ad: AIGeneratedContent) => {
     setTestingAd(ad);
     setIsTestDialogOpen(true);
   };
@@ -298,34 +339,13 @@ export default function AIAdsPage() {
                     ))}
                   </select>
                 </div>
-                
-                {templates && templates.length > 0 && (
-                  <div>
-                    <Label className="text-right block mb-2">القوالب المقترحة</Label>
-                    <div className="grid grid-cols-1 gap-2">
-                      {templates.slice(0, 3).map(template => (
-                        <Button
-                          key={template.id}
-                          variant="outline"
-                          className="justify-between"
-                          onClick={() => setNewAd({
-                            ...newAd,
-                            prompt: template.prompt
-                          })}
-                        >
-                          <span>{template.name}</span>
-                          <Sparkles className="w-4 h-4" />
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  إلغاء
-                </Button>
-                <Button onClick={handleGenerateAd} disabled={generateAdMutation.isPending}>
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  onClick={handleGenerateAd}
+                  disabled={generateAdMutation.isPending}
+                >
                   {generateAdMutation.isPending ? "جاري الإنشاء..." : "إنشاء الإعلان"}
                 </Button>
               </div>
@@ -333,127 +353,32 @@ export default function AIAdsPage() {
           </Dialog>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="glass-morphism border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600">
-                  <Image className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">إجمالي الإعلانات</p>
-                  <p className="text-2xl font-bold">{ads?.length || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="glass-morphism border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">إعلانات هذا الأسبوع</p>
-                  <p className="text-2xl font-bold">15</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="glass-morphism border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600">
-                  <BarChart3 className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">متوسط الأداء</p>
-                  <p className="text-2xl font-bold">78%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="glass-morphism border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-red-600">
-                  <Target className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">المنصات المدعومة</p>
-                  <p className="text-2xl font-bold">{platforms?.length || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Performance Chart */}
+        {/* Filters */}
         <Card className="glass-morphism border-white/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              أداء الإعلانات
-            </CardTitle>
-            <CardDescription>
-              مقارنة أداء الإعلانات عبر المنصات المختلفة
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center">
-              <div className="text-center">
-                <BarChart3 className="w-12 h-12 mx-auto text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">
-                  سيتم عرض الرسم البياني هنا
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Filters and Search */}
-        <Card className="glass-morphism border-white/20">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="بحث في الإعلانات..."
+                  placeholder="البحث في الإعلانات..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white/10 border-white/20 text-foreground placeholder:text-gray-400"
+                  className="pl-10"
                 />
               </div>
-              
               <div className="flex gap-2">
-                <Button 
-                  variant={filterPlatform === "all" ? "default" : "outline"}
-                  onClick={() => setFilterPlatform("all")}
-                  className="flex items-center gap-2"
+                <select
+                  value={filterPlatform}
+                  onChange={(e) => setFilterPlatform(e.target.value)}
+                  className="border rounded-md p-2"
                 >
-                  <Filter className="w-4 h-4" />
-                  الكل
-                </Button>
-                <Button 
-                  variant={filterPlatform === "facebook" ? "default" : "outline"}
-                  onClick={() => setFilterPlatform("facebook")}
-                  className="flex items-center gap-2"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  فيسبوك
-                </Button>
-                <Button 
-                  variant={filterPlatform === "google" ? "default" : "outline"}
-                  onClick={() => setFilterPlatform("google")}
-                  className="flex items-center gap-2"
-                >
-                  <Monitor className="w-4 h-4" />
-                  جوجل
-                </Button>
+                  <option value="all">جميع المنصات</option>
+                  {platforms?.map(platform => (
+                    <option key={platform.id} value={platform.id}>
+                      {platform.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </CardContent>
@@ -462,96 +387,70 @@ export default function AIAdsPage() {
         {/* Ads Table */}
         <Card className="glass-morphism border-white/20">
           <CardHeader>
-            <CardTitle>الإعلانات الذكية</CardTitle>
-            <CardDescription>إدارة الإعلانات المولدة بواسطة الذكاء الاصطناعي</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              الإعلانات الذكية
+            </CardTitle>
+            <CardDescription>
+              إدارة الإعلانات المولدة بالذكاء الاصطناعي
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>الإعلان</TableHead>
-                    <TableHead>المنصة والتنسيق</TableHead>
-                    <TableHead>الأداء</TableHead>
-                    <TableHead>التاريخ</TableHead>
+                    <TableHead>الوصف</TableHead>
+                    <TableHead>المنصة</TableHead>
+                    <TableHead>التنسيق</TableHead>
+                    <TableHead>تاريخ الإنشاء</TableHead>
                     <TableHead>الإجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAds && filteredAds.map((ad) => (
+                  {filteredAds?.map((ad) => (
                     <TableRow key={ad.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
-                            {ad.imageUrl ? (
-                              <img 
-                                src={ad.imageUrl} 
-                                alt="AI Generated Ad" 
-                                className="w-full h-full object-cover rounded-xl"
-                              />
-                            ) : (
-                              <Image className="w-6 h-6 text-gray-400" />
-                            )}
-                          </div>
-                          <div className="max-w-xs">
-                            <div className="font-medium line-clamp-1">{ad.prompt}</div>
-                            <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {ad.content}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1">
-                            {getPlatformIcon(ad.entityId || "facebook")}
-                            <span>{getPlatformName(ad.entityId || "facebook")}</span>
-                          </div>
-                          <Badge variant="secondary" className="w-fit">
-                            {getFormatName(ad.entityId || "image")}
-                          </Badge>
-                        </div>
+                      <TableCell className="font-medium max-w-xs truncate">
+                        {ad.prompt}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="text-sm">85%</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <XCircle className="w-4 h-4 text-red-500" />
-                            <span className="text-sm">15%</span>
-                          </div>
+                          {getPlatformIcon(ad.entityId || '')}
+                          {getPlatformName(ad.entityId || '')}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {ad.createdAt ? format(new Date(ad.createdAt), "PPP", { locale: ar }) : ""}
+                        <Badge variant="secondary">
+                          {getFormatName(ad.type)}
+                        </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
+                        {format(new Date(ad.createdAt), 'PPP', { locale: ar })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
                           <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => openViewDialog(ad)}
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => openViewDialog({...ad, imageUrl: ad.imageUrl ?? undefined})}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => openTestDialog(ad)}
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => openTestDialog({...ad, imageUrl: ad.imageUrl ?? undefined})}
                           >
                             <BarChart3 className="w-4 h-4" />
                           </Button>
                           <Button 
-                            variant="ghost" 
-                            size="sm" 
+                            variant="outline" 
+                            size="sm"
                             onClick={() => handleDeleteAd(ad.id)}
-                            disabled={deleteAdMutation.isPending}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -564,142 +463,93 @@ export default function AIAdsPage() {
             )}
           </CardContent>
         </Card>
-      </motion.div>
-      
-      {/* View Ad Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>عرض الإعلان الذكي</DialogTitle>
-            <DialogDescription>
-              تفاصيل الإعلان المولد
-            </DialogDescription>
-          </DialogHeader>
-          {viewingAd && (
-            <div className="grid gap-4 py-4">
-              <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-64 flex items-center justify-center">
-                {viewingAd.imageUrl ? (
-                  <img 
-                    src={viewingAd.imageUrl} 
-                    alt="AI Generated Ad" 
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                ) : (
-                  <div className="text-center">
-                    <Image className="w-16 h-16 mx-auto text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-500">إعلان ذكي</p>
-                  </div>
-                )}
-              </div>
-              <div>
-                <Label>الوصف</Label>
-                <p className="mt-1 text-sm">{viewingAd.prompt}</p>
-              </div>
-              <div>
-                <Label>المنصة والتنسيق</Label>
-                <div className="flex gap-2 mt-1">
-                  <Badge variant="secondary">
-                    {getPlatformName(viewingAd.entityId || "facebook")}
-                  </Badge>
-                  <Badge variant="outline">
-                    {getFormatName(viewingAd.entityId || "image")}
-                  </Badge>
-                </div>
-              </div>
-              <div>
-                <Label>المحتوى المولد</Label>
-                <Textarea
-                  value={viewingAd.content}
-                  readOnly
-                  className="mt-1 min-h-[100px]"
-                />
-              </div>
-              <div>
-                <Label>تاريخ الإنشاء</Label>
-                <p className="mt-1 text-sm">
-                  {viewingAd.createdAt ? format(new Date(viewingAd.createdAt), "PPP p", { locale: ar }) : ""}
-                </p>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-      
-      {/* Test Performance Dialog */}
-      <Dialog open={isTestDialogOpen} onOpenChange={setIsTestDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>اختبار أداء الإعلان</DialogTitle>
-            <DialogDescription>
-              اختبار أداء الإعلان وتحليل النتائج
-            </DialogDescription>
-          </DialogHeader>
-          {testingAd && (
-            <div className="grid gap-4 py-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
-                  {testingAd.imageUrl ? (
-                    <img 
-                      src={testingAd.imageUrl} 
-                      alt="AI Generated Ad" 
-                      className="w-full h-full object-cover rounded-xl"
-                    />
-                  ) : (
-                    <Image className="w-6 h-6 text-gray-400" />
-                  )}
+
+        {/* View Ad Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>عرض الإعلان الذكي</DialogTitle>
+            </DialogHeader>
+            {viewingAd && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">الوصف:</h3>
+                  <p className="text-muted-foreground">{viewingAd.prompt}</p>
                 </div>
                 <div>
-                  <div className="font-medium">{testingAd.prompt}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {getPlatformName(testingAd.entityId || "facebook")}
+                  <h3 className="font-semibold mb-2">المحتوى المولد:</h3>
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p>{viewingAd.content}</p>
                   </div>
                 </div>
+                {viewingAd.imageUrl && (
+                  <div>
+                    <h3 className="font-semibold mb-2">الصورة:</h3>
+                    <img 
+                      src={viewingAd.imageUrl} 
+                      alt="Generated ad" 
+                      className="w-full rounded-lg"
+                    />
+                  </div>
+                )}
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>
+                    المنصة: {getPlatformName(viewingAd.entityId || '')}
+                  </span>
+                  <span>
+                    التاريخ: {format(new Date(viewingAd.createdAt), 'PPP', { locale: ar })}
+                  </span>
+                </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <Card>
-                  <CardContent className="p-3 text-center">
-                    <div className="text-2xl font-bold text-green-500">85%</div>
-                    <div className="text-sm text-muted-foreground">معدل النقر</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 text-center">
-                    <div className="text-2xl font-bold text-blue-500">3.2%</div>
-                    <div className="text-sm text-muted-foreground">معدل التحويل</div>
-                  </CardContent>
-                </Card>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Test Performance Dialog */}
+        <Dialog open={isTestDialogOpen} onOpenChange={setIsTestDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>اختبار أداء الإعلان</DialogTitle>
+              <DialogDescription>
+                اختبار الأداء الافتراضي للإعلان
+              </DialogDescription>
+            </DialogHeader>
+            {testingAd && (
+              <div className="space-y-4">
+                <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-lg">
+                  <h3 className="font-semibold mb-2">نتائج الاختبار:</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">2.4%</div>
+                      <div className="text-sm text-muted-foreground">معدل النقر</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">85</div>
+                      <div className="text-sm text-muted-foreground">درجة الأداء</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">التوصيات:</h3>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>جرب تعديل نص الإعلان لزيادة معدل النقر</li>
+                    <li>استخدم صورًا مختلفة لتحسين التفاعل</li>
+                    <li>غيّر الجمهور المستهدف لزيادة التحويلات</li>
+                  </ul>
+                </div>
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={() => handleTestPerformance(testingAd.id)}
+                    disabled={testPerformanceMutation.isPending}
+                  >
+                    {testPerformanceMutation.isPending ? "جاري الاختبار..." : "اختبار الأداء"}
+                  </Button>
+                </div>
               </div>
-              
-              <div>
-                <Label>التوصيات</Label>
-                <ul className="mt-2 space-y-1">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-                    <span className="text-sm">استمر في استخدام هذا الإعلان</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Play className="w-4 h-4 text-blue-500 mt-0.5" />
-                    <span className="text-sm">جرب تعديل نص الإعلان لتحسين الأداء</span>
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsTestDialogOpen(false)}>
-                  إلغاء
-                </Button>
-                <Button 
-                  onClick={() => handleTestPerformance(testingAd.id)}
-                  disabled={testPerformanceMutation.isPending}
-                >
-                  {testPerformanceMutation.isPending ? "جاري الاختبار..." : "اختبار جديد"}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            )}
+          </DialogContent>
+        </Dialog>
+      </motion.div>
     </div>
   );
 }

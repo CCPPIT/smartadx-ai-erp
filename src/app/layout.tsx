@@ -3,6 +3,7 @@ import "./globals.css";
 import ClientBody from "./ClientBody";
 import { TRPCProvider } from "@/lib/trpc-react";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: "SmartAdX AI ERP",
@@ -18,10 +19,12 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning className="antialiased">
         <TRPCProvider>
-          <ClientBody>
-            <Toaster/>
-            {children}
+          <AuthProvider>
+            <ClientBody>
+              <Toaster/>
+              {children}
             </ClientBody>
+          </AuthProvider>
         </TRPCProvider>
       </body>
     </html>

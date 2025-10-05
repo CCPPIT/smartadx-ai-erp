@@ -6,6 +6,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.17-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Framer Motion](https://img.shields.io/badge/Framer_Motion-12.23.3-0055FF?style=for-the-badge&logo=framer)](https://www.framer.com/motion/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 ### 🚀 نظرة عامة
 
@@ -18,17 +20,32 @@ SmartAdX AI ERP هو نظام إدارة موارد المؤسسات (ERP) ال�
 - 📱 **تصميم متجاوب**: تجربة مثالية على جميع الأجهزة
 - 🎨 **Glass Morphism**: تصميم عصري مع تأثيرات بصرية جذابة
 - ⚡ **أداء عالي**: مبني على Next.js 15 مع أحدث التقنيات
-- 🔒 **آمان متقدم**: حماية البيانات وإدارة الصلاحيات
+- 🔒 **آمان متقدم**: JWT Authentication, Session Management, Role-Based Access
+- 📧 **نظام بريد إلكتروني**: قوالب احترافية مع دعم RTL
+- 🐳 **Docker Ready**: جاهز للنشر مع Docker & Docker Compose
 
 ### 🛠️ التقنيات المستخدمة
 
-- **Frontend Framework**: Next.js 15.3.2 with TypeScript
-- **UI Components**: ShadCN UI + Radix UI
-- **Styling**: Tailwind CSS 3.4.17
+#### Frontend
+- **Framework**: Next.js 15.3.2 with TypeScript 5.8.3
+- **UI Components**: ShadCN UI + Radix UI (46+ components)
+- **Styling**: Tailwind CSS 3.4.17 with Glass Morphism
 - **Animations**: Framer Motion 12.23.3
 - **Icons**: Lucide React
-- **Code Quality**: Biome, ESLint
-- **Package Manager**: Bun
+- **State Management**: React Context + tRPC
+
+#### Backend
+- **API**: tRPC with 20+ routers
+- **Database**: Prisma ORM (SQLite/PostgreSQL)
+- **Authentication**: JWT + Session Management
+- **Email**: Nodemailer (SendGrid/SMTP)
+- **Real-time**: WebSocket support
+
+#### DevOps
+- **Containerization**: Docker + Docker Compose
+- **Caching**: Redis support
+- **Code Quality**: Biome, ESLint, TypeScript
+- **Package Manager**: npm/bun
 
 ### 📁 هيكل المشروع
 
@@ -48,28 +65,44 @@ smartadx-ai-erp/
 
 ### 🚀 البدء السريع
 
-#### 1. استنساخ المشروع
+#### الطريقة 1: التطوير المحلي
 
 ```bash
+# 1. استنساخ المشروع
 git clone https://github.com/CCPPIT/smartadx-ai-erp.git
 cd smartadx-ai-erp
-```
 
-#### 2. تثبيت التبعيات
-
-```bash
+# 2. تثبيت التبعيات
+npm install
+# أو
 bun install
+
+# 3. إعداد البيئة
+cp .env.example .env.local
+# عدّل .env.local بالقيم المطلوبة
+
+# 4. إعداد قاعدة البيانات
+npx prisma generate
+npx prisma migrate dev
+npm run seed
+
+# 5. تشغيل خادم التطوير
+npm run dev
 ```
 
-#### 3. تشغيل خادم التطوير
+#### الطريقة 2: Docker (موصى به)
 
 ```bash
-bun dev
-```
+# Development
+docker-compose -f docker-compose.dev.yml up
 
-#### 4. افتح المتصفح
+# Production
+docker-compose up -d
+```
 
 زر [http://localhost:3000](http://localhost:3000) لرؤية التطبيق.
+
+📖 **للمزيد من التفاصيل**: راجع [INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)
 
 ### 🔧 البناء والنشر
 
@@ -97,22 +130,76 @@ bun run lint
 bun run format
 ```
 
-### 📱 الميزات التقنية
+### 📱 الوحدات والميزات
 
-#### 1. Sidebar متطور
-- تصميم Glass Morphism
-- دعم كامل للأجهزة المحمولة
-- انتقالات سلسة مع Framer Motion
+#### 🔐 المصادقة والأمان
+- JWT Authentication (Access & Refresh Tokens)
+- Session Management مع قاعدة البيانات
+- Password Hashing & Validation
+- Role-Based Access Control (RBAC)
+- Multi-Factor Authentication (قريباً)
+- OAuth Integration (قريباً)
 
-#### 2. لوحة تحكم ذكية
-- بطاقات إحصائيات تفاعلية
-- رسوم بيانية متقدمة
-- تحديث فوري للبيانات
+#### 📊 إدارة الحملات
+- إنشاء وإدارة الحملات الإعلانية
+- تتبع الأداء في الوقت الفعلي
+- تحليلات متقدمة ورسوم بيانية
+- AI-powered insights
 
-#### 3. تجربة مستخدم محسنة
-- تحميل سريع مع Next.js 15
-- تحسين SEO
-- استجابة كاملة للأجهزة
+#### 🤖 الذكاء الاصطناعي
+- توليد محتوى إعلاني
+- تحليل المنافسين
+- استهداف ذكي
+- كتابة نصوص تسويقية
+- تحليل اتجاهات السوق
+
+#### 👥 إدارة العملاء
+- قاعدة بيانات العملاء
+- سجل التفاعلات
+- إدارة الفواتير والمدفوعات
+
+#### 📧 التواصل
+- نظام إشعارات متقدم
+- قوالب بريد إلكتروني احترافية
+- دعم RTL للعربية
+
+#### 📱 وسائل التواصل الاجتماعي
+- جدولة المنشورات
+- إدارة متعددة المنصات
+- تحليل الأداء
+
+#### 💳 الفواتير والمدفوعات
+- إنشاء الفواتير
+- تتبع المدفوعات
+- تقارير مالية
+
+#### 📈 التقارير والتحليلات
+- تقارير مخصصة
+- تصدير PDF/Excel
+- لوحات تحكم تفاعلية
+
+### 📚 التوثيق
+
+- 📖 [دليل التثبيت](INSTALLATION_GUIDE.md) - خطوات التثبيت الكاملة
+- 🐳 [دليل Docker](DOCKER_GUIDE.md) - النشر باستخدام Docker
+- 🔌 [توثيق API](API_DOCUMENTATION.md) - مرجع API الكامل
+- ⚙️ [إعداد البيئة](ENV_SETUP.md) - متغيرات البيئة
+- 🗄️ [تحسين قاعدة البيانات](DATABASE_OPTIMIZATION.md) - أداء قاعدة البيانات
+- 📝 [سجل التغييرات](CHANGELOG.md) - تاريخ الإصدارات
+- 📋 [ملخص التنفيذ](IMPLEMENTATION_SUMMARY.md) - ما تم إنجازه
+
+### 🧪 الاختبار
+
+```bash
+# Unit tests
+npm test
+
+# E2E tests
+npm run test:e2e
+
+# Coverage
+npm run test:coverage
+```
 
 ### 🤝 المساهمة
 
@@ -123,6 +210,14 @@ bun run format
 3. Commit التغييرات (`git commit -m 'Add amazing feature'`)
 4. Push للفرع (`git push origin feature/amazing-feature`)
 5. فتح Pull Request
+
+### 🐛 الإبلاغ عن المشاكل
+
+إذا وجدت مشكلة، يرجى [فتح issue](https://github.com/CCPPIT/smartadx-ai-erp/issues) مع:
+- وصف المشكلة
+- خطوات إعادة الإنتاج
+- السلوك المتوقع
+- لقطات الشاشة (إن أمكن)
 
 ### 📄 الترخيص
 

@@ -36,6 +36,10 @@ model User {
   preference              UserPreference?
   clients                 Client[]
   rewards                 Reward[]
+  // Authentication relations
+  userRoles               UserRole[]
+  userAuthMethods         UserAuthMethod[]
+  sessions                UserSession[]
 }
 
 // Campaign model
@@ -284,4 +288,103 @@ model Reward {
   claimedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// Role model for user roles
+model Role {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  description     String?
+  level           Int              @default(1)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+}
+
+// Permission model for system permissions
+model Permission {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  description     String?
+  category        String?
+  createdAt       DateTime         @default(now())
+  rolePermissions RolePermission[]
+}
+
+// UserRole model for mapping users to roles
+model UserRole {
+  userId     String
+  roleId     Int
+  assignedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+  role       Role     @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+}
+
+// RolePermission model for mapping roles to permissions
+model RolePermission {
+  roleId       Int
+  permissionId Int
+  createdAt    DateTime   @default(now())
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+}
+
+// AuthenticationMethod model for defining authentication methods
+model AuthenticationMethod {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  displayName     String
+  description     String?
+  isActive        Boolean          @default(true)
+  config          Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userAuthMethods UserAuthMethod[]
+}
+
+// UserAuthMethod model for tracking user authentication methods
+model UserAuthMethod {
+  id           Int                  @id @default(autoincrement())
+  userId       String
+  authMethodId Int
+  isPrimary    Boolean              @default(false)
+  isEnabled    Boolean              @default(true)
+  config       Json?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  user         User                 @relation(fields: [userId], references: [id])
+  authMethod   AuthenticationMethod @relation(fields: [authMethodId], references: [id])
+
+  @@unique([userId, authMethodId])
+}
+
+// UserSession model for tracking user sessions
+model UserSession {
+  id           String   @id
+  userId       String
+  authMethod   String
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastAccessed DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+// AuthAuditLog model for authentication audit logs
+model AuthAuditLog {
+  id            Int      @id @default(autoincrement())
+  userId        String?
+  action        String
+  authMethod    String?
+  ipAddress     String?
+  userAgent     String?
+  success       Boolean
+  failureReason String?
+  createdAt     DateTime @default(now())
 }

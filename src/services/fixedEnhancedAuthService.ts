@@ -1,0 +1,564 @@
+import { jwtVerify, SignJWT } from 'jose'
+import { nanoid } from 'nanoid'
+import { cookies } from 'next/headers'
+import { NextRequest } from 'next/server'
+import { randomBytes } from 'crypto'
+
+// User roles with hierarchy
+export type UserRole = 'USER' | 'ADMIN' | 'MANAGER' | 'ANALYST'
+
+// Authentication methods
+export type AuthMethod = 
+  | 'password' 
+  | 'oauth' 
+  | 'mfa' 
+  | 'biometric' 
+  | 'passwordless' 
+  | 'saml' 
+  | 'ldap'
+
+// OAuth flows
+export type OAuthFlow = 'authorization_code' | 'implicit' | 'client_credentials' | 'device_code'
+
+// Biometric types
+export type BiometricType = 'fingerprint' | 'face' | 'voice' | 'iris' | 'webauthn'
+
+// Passwordless methods
+export type PasswordlessMethod = 'magic_link' | 'one_time_code' | 'push_notification'
+
+// Social providers
+export type SocialProvider = 'google' | 'facebook' | 'github' | 'microsoft' | 'linkedin' | 'twitter'
+
+// Enterprise protocols
+export type EnterpriseProtocol = 'saml' | 'ldap' | 'kerberos'
+
+// Advanced security methods
+export type AdvancedSecurityMethod = 'mtls' | 'api_key' | 'hmac'
+
+// MFA types
+export type MFAType = 'totp' | 'sms' | 'email' | 'biometric' | 'securityKey'
+
+// User interface with enhanced fields
+export interface User {
+  id: string
+  email: string
+  name?: string
+  role: UserRole
+  authMethods: AuthMethod[]
+  mfaEnabled: boolean
+  mfaMethods?: MFAType[]
+  emailVerified: boolean
+  createdAt: Date
+  lastLogin: Date
+  // Advanced authentication fields
+  oauthProviders?: SocialProvider[]
+  biometricRegistered?: boolean
+  securityKeys?: SecurityKey[]
+  samlEnabled?: boolean
+  ldapEnabled?: boolean
+  apiKeys?: APIKey[]
+}
+
+// Security Key interface for WebAuthn/FIDO2
+export interface SecurityKey {
+  id: string
+  name: string
+  credentialId: string
+  publicKey: string
+  counter: number
+  transports?: string[]
+  createdAt: Date
+}
+
+// API Key interface for advanced security
+export interface APIKey {
+  id: string
+  name: string
+  key: string
+  createdAt: Date
+  expiresAt?: Date
+  permissions: string[]
+}
+
+// OAuth configuration
+export interface OAuthConfig {
+  provider: SocialProvider
+  clientId: string
+  clientSecret: string
+  redirectUri: string
+  scope: string[]
+}
+
+// SAML configuration
+export interface SAMLConfig {
+  idpUrl: string
+  entityId: string
+  certificate: string
+  acsUrl: string
+}
+
+// LDAP configuration
+export interface LDAPConfig {
+  url: string
+  bindDN: string
+  bindCredentials: string
+  searchBase: string
+  searchFilter: string
+}
+
+// JWT payload
+interface JWTPayload {
+  userId: string
+  email: string
+  role: UserRole
+  sessionId: string
+  exp: number
+  iat: number
+}
+
+// Authentication tokens
+export interface AuthTokens {
+  accessToken: string
+  refreshToken: string
+}
+
+// Authentication service class
+export class EnhancedAuthService {
+  private static SECRET_KEY = new TextEncoder().encode(
+    process.env.AUTH_SECRET || 'fallback_secret_key_for_development'
+  )
+  
+  private static REFRESH_SECRET_KEY = new TextEncoder().encode(
+    process.env.REFRESH_SECRET || 'fallback_refresh_secret_for_development'
+  )
+
+  // Generate JWT access token
+  static async generateAccessToken(payload: Omit<JWTPayload, 'exp' | 'iat' | 'sessionId'>): Promise<string> {
+    const sessionId = nanoid()
+    const token = await new SignJWT({ ...payload, sessionId })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('15m') // 15 minutes
+      .sign(this.SECRET_KEY)
+    
+    return token
+  }
+
+  // Generate refresh token
+  static async generateRefreshToken(userId: string): Promise<string> {
+    const token = await new SignJWT({ userId })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('7d') // 7 days
+      .sign(this.REFRESH_SECRET_KEY)
+    
+    return token
+  }
+
+  // Verify access token
+  static async verifyAccessToken(token: string): Promise<JWTPayload | null> {
+    try {
+      const { payload } = await jwtVerify(token, this.SECRET_KEY)
+      return payload as JWTPayload
+    } catch (error) {
+      console.error('Access token verification failed:', error)
+      return null
+    }
+  }
+
+  // Verify refresh token
+  static async verifyRefreshToken(token: string): Promise<{ userId: string } | null> {
+    try {
+      const { payload } = await jwtVerify(token, this.REFRESH_SECRET_KEY)
+      return payload as { userId: string }
+    } catch (error) {
+      console.error('Refresh token verification failed:', error)
+      return null
+    }
+  }
+
+  // Create authentication tokens
+  static async createAuthTokens(user: Omit<User, 'authMethods' | 'mfaEnabled' | 'emailVerified' | 'createdAt' | 'lastLogin' | 'oauthProviders' | 'biometricRegistered' | 'securityKeys' | 'samlEnabled' | 'ldapEnabled' | 'apiKeys' | 'mfaMethods'>): Promise<AuthTokens> {
+    const accessToken = await this.generateAccessToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    })
+    
+    const refreshToken = await this.generateRefreshToken(user.id)
+    
+    return { accessToken, refreshToken }
+  }
+
+  // Set auth cookies
+  static setAuthCookies(tokens: AuthTokens) {
+    const cookieStore = cookies()
+    
+    cookieStore.set('access_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 15 * 60, // 15 minutes
+      path: '/',
+      sameSite: 'strict'
+    })
+    
+    cookieStore.set('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: '/',
+      sameSite: 'strict'
+    })
+  }
+
+  // Clear auth cookies
+  static clearAuthCookies() {
+    const cookieStore = cookies()
+    
+    cookieStore.delete('access_token')
+    cookieStore.delete('refresh_token')
+  }
+
+  // Get user from request
+  static async getUserFromRequest(request: NextRequest): Promise<JWTPayload | null> {
+    const accessToken = request.cookies.get('access_token')?.value
+    
+    if (!accessToken) {
+      return null
+    }
+    
+    return await this.verifyAccessToken(accessToken)
+  }
+
+  // Password-based authentication
+  static async authenticateWithPassword(email: string, password: string): Promise<User | null> {
+    // In a real implementation, this would check against a database
+    // and verify the password using a secure hashing algorithm
+    
+    // Simulate user lookup
+    const user: User = {
+      id: 'user-' + nanoid(),
+      email,
+      name: 'Test User',
+      role: 'USER',
+      authMethods: ['password'],
+      mfaEnabled: false,
+      emailVerified: true,
+      createdAt: new Date(),
+      lastLogin: new Date()
+    }
+    
+    // Simulate password verification
+    if (password.length >= 6) {
+      return user
+    }
+    
+    return null
+  }
+
+  // OAuth 2.0 & OpenID Connect flows
+  static async initiateOAuthFlow(provider: SocialProvider, flow: OAuthFlow, config: OAuthConfig): Promise<string> {
+    // Generate authorization URL based on the flow
+    const state = nanoid()
+    const nonce = nanoid()
+    
+    let authUrl: string
+    
+    switch (flow) {
+      case 'authorization_code':
+        authUrl = `https://${provider}.com/oauth/authorize?` +
+          `client_id=${config.clientId}&` +
+          `redirect_uri=${config.redirectUri}&` +
+          `response_type=code&` +
+          `scope=${config.scope.join(' ')}&` +
+          `state=${state}&` +
+          `nonce=${nonce}`
+        break
+        
+      case 'implicit':
+        authUrl = `https://${provider}.com/oauth/authorize?` +
+          `client_id=${config.clientId}&` +
+          `redirect_uri=${config.redirectUri}&` +
+          `response_type=token&` +
+          `scope=${config.scope.join(' ')}&` +
+          `state=${state}`
+        break
+        
+      case 'client_credentials':
+        // For server-to-server communication
+        authUrl = `https://${provider}.com/oauth/token`
+        break
+        
+      case 'device_code':
+        // For IoT devices
+        authUrl = `https://${provider}.com/oauth/device`
+        break
+        
+      default:
+        throw new Error('Unsupported OAuth flow')
+    }
+    
+    // Store state and nonce for verification
+    const oauthState = {
+      state,
+      nonce,
+      provider,
+      flow,
+      createdAt: new Date()
+    }
+    
+    // In a real implementation, store this in a database or cache
+    // For now, we'll use localStorage for demonstration
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(`oauth_state_${state}`, JSON.stringify(oauthState))
+    }
+    
+    return authUrl
+  }
+
+  static async handleOAuthCallback(provider: SocialProvider, code: string, state: string): Promise<User | null> {
+    // Verify state parameter
+    let storedState: string | null = null
+    if (typeof localStorage !== 'undefined') {
+      storedState = localStorage.getItem(`oauth_state_${state}`)
+      if (storedState) {
+        localStorage.removeItem(`oauth_state_${state}`)
+      }
+    }
+    
+    if (!storedState) {
+      throw new Error('Invalid OAuth state')
+    }
+    
+    const oauthState = JSON.parse(storedState)
+    
+    if (oauthState.provider !== provider) {
+      throw new Error('OAuth provider mismatch')
+    }
+    
+    // Exchange code for tokens (authorization code flow)
+    // In a real implementation, this would call the provider's token endpoint
+    // For simulation, we'll create a mock user
+    const user: User = {
+      id: `oauth-${provider}-${nanoid()}`,
+      email: `${provider}-user@example.com`,
+      name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
+      role: 'USER',
+      authMethods: ['oauth'],
+      mfaEnabled: false,
+      emailVerified: true,
+      createdAt: new Date(),
+      lastLogin: new Date(),
+      oauthProviders: [provider]
+    }
+    
+    return user
+  }
+
+  // MFA/2FA methods
+  static async setupMFA(userId: string, mfaType: MFAType): Promise<{ secret?: string; qrCode?: string; challenge?: string } | null> {
+    switch (mfaType) {
+      case 'totp':
+        // Generate TOTP secret
+        const secret = this.generateTOTPSecret()
+        const qrCode = await this.generateTOTPQRCode(secret, userId)
+        return { secret, qrCode }
+        
+      case 'sms':
+        // For SMS, we would send a code to the user's phone
+        // In a real implementation, this would integrate with an SMS service
+        return { challenge: 'sms_code_sent' }
+        
+      case 'email':
+        // For email, we would send a code to the user's email
+        return { challenge: 'email_code_sent' }
+        
+      case 'biometric':
+        // For biometric, we would register the biometric data
+        return { challenge: 'biometric_registered' }
+        
+      case 'securityKey':
+        // For security keys, we would initiate WebAuthn registration
+        const challenge = this.generateChallenge()
+        return { challenge }
+        
+      default:
+        return null
+    }
+  }
+
+  static async verifyMFA(userId: string, mfaType: MFAType, verificationData: any): Promise<boolean> {
+    switch (mfaType) {
+      case 'totp':
+        // Verify TOTP code
+        return this.verifyTOTP(verificationData.secret, verificationData.code)
+        
+      case 'sms':
+      case 'email':
+        // Verify SMS/email code
+        // In a real implementation, this would check against a stored code
+        return verificationData.code === '123456' // Mock verification
+        
+      case 'biometric':
+        // Verify biometric data
+        return true // Mock verification
+        
+      case 'securityKey':
+        // Verify security key authentication
+        return true // Mock verification
+        
+      default:
+        return false
+    }
+  }
+
+  // Helper methods for TOTP
+  private static generateTOTPSecret(): string {
+    // Generate a random base32-encoded secret
+    return randomBytes(20).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 16).toUpperCase()
+  }
+
+  private static async generateTOTPQRCode(secret: string, userId: string): Promise<string> {
+    // Generate a QR code for TOTP setup
+    // In a real implementation, this would generate an actual QR code
+    // For now, we'll return a mock data URL
+    return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==`
+  }
+
+  // Helper method to generate challenges
+  private static generateChallenge(): string {
+    return nanoid()
+  }
+
+  // Helper method to verify TOTP codes
+  private static verifyTOTP(secret: string, code: string): boolean {
+    // In a real implementation, this would verify the TOTP code
+    // For now, we'll just check if it's a 6-digit number
+    return /^\d{6}$/.test(code)
+  }
+
+  // Biometric authentication methods
+  static async registerBiometric(userId: string, biometricType: BiometricType): Promise<{ challenge: string } | null> {
+    const challenge = this.generateChallenge()
+    return { challenge }
+  }
+
+  static async verifyBiometric(userId: string, biometricType: BiometricType, biometricData: any): Promise<boolean> {
+    // In a real implementation, this would verify the biometric data
+    return true // Mock verification
+  }
+
+  // Passwordless authentication methods
+  static async initiatePasswordlessAuth(email: string, method: PasswordlessMethod): Promise<boolean> {
+    // In a real implementation, this would send a magic link or code
+    console.log(`Sending ${method} to ${email}`)
+    return true
+  }
+
+  static async verifyPasswordlessToken(token: string): Promise<User | null> {
+    // In a real implementation, this would verify the token
+    // Simulate successful verification
+    const user: User = {
+      id: 'passwordless-' + nanoid(),
+      email: 'passwordless@example.com',
+      name: 'Passwordless User',
+      role: 'USER',
+      authMethods: ['passwordless'],
+      mfaEnabled: false,
+      emailVerified: true,
+      createdAt: new Date(),
+      lastLogin: new Date()
+    }
+    
+    return user
+  }
+
+  // Enterprise authentication methods
+  static async authenticateWithSAML(samlResponse: string, config: SAMLConfig): Promise<User | null> {
+    // In a real implementation, this would verify the SAML response
+    const user: User = {
+      id: 'saml-' + nanoid(),
+      email: 'saml-user@example.com',
+      name: 'SAML User',
+      role: 'USER',
+      authMethods: ['saml'],
+      mfaEnabled: false,
+      emailVerified: true,
+      createdAt: new Date(),
+      lastLogin: new Date(),
+      samlEnabled: true
+    }
+    
+    return user
+  }
+
+  static async authenticateWithLDAP(username: string, password: string, config: LDAPConfig): Promise<User | null> {
+    // In a real implementation, this would verify against LDAP
+    const user: User = {
+      id: 'ldap-' + nanoid(),
+      email: `${username}@ldap.example.com`,
+      name: `LDAP User ${username}`,
+      role: 'USER',
+      authMethods: ['ldap'],
+      mfaEnabled: false,
+      emailVerified: true,
+      createdAt: new Date(),
+      lastLogin: new Date(),
+      ldapEnabled: true
+    }
+    
+    return user
+  }
+
+  // Advanced security methods
+  static async authenticateWithAPIKey(apiKey: string): Promise<User | null> {
+    // In a real implementation, this would verify the API key
+    const user: User = {
+      id: 'api-' + nanoid(),
+      email: 'api-user@example.com',
+      name: 'API User',
+      role: 'USER',
+      authMethods: ['api_key'],
+      mfaEnabled: false,
+      emailVerified: true,
+      createdAt: new Date(),
+      lastLogin: new Date()
+    }
+    
+    return user
+  }
+
+  static async authenticateWithMTLS(certificate: string): Promise<User | null> {
+    // In a real implementation, this would verify the client certificate
+    const user: User = {
+      id: 'mtls-' + nanoid(),
+      email: 'mtls-user@example.com',
+      name: 'mTLS User',
+      role: 'USER',
+      authMethods: ['mtls'],
+      mfaEnabled: false,
+      emailVerified: true,
+      createdAt: new Date(),
+      lastLogin: new Date()
+    }
+    
+    return user
+  }
+
+  // Design pattern implementations
+  static async gatewayAuthentication(token: string): Promise<User | null> {
+    // Gateway authentication pattern
+    return await this.verifyAccessToken(token)
+  }
+
+  static async federatedIdentity(provider: SocialProvider, accessToken: string): Promise<User | null> {
+    // Federated identity pattern
+    return await this.authenticateWithOAuth(provider, 'provider-id', accessToken)
+  }
+
+  static async zeroTrustAuthentication(userId: string, resource: string, action: string): Promise<boolean> {
+    // Zero trust authentication pattern
+    // In a real implementation, this would check if the user has access to the resource
+    return true // Mock verification
+  }
+}
