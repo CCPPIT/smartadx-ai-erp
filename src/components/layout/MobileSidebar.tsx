@@ -21,19 +21,38 @@ import {
   Plus,
   Zap,
   TrendingUp,
-  Menu
+  Menu,
+  WandSparkles,
+  FileText,
+  Gift,
+  User,
+  HelpCircle,
+  BookOpen,
+  Server
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MobileSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+}
+
+// Define user roles including SUPER_ADMIN
+type UserRole = "SUPER_ADMIN" | "ADMIN" | "MANAGER" | "ANALYST" | "USER";
+
+// Extend User interface to include role
+interface UserWithRole {
+  id: string;
+  email: string;
+  name?: string;
+  role?: UserRole;
 }
 
 const menuItems = [
@@ -43,7 +62,8 @@ const menuItems = [
     icon: LayoutDashboard,
     badge: null,
     gradient: "from-blue-500 to-purple-600",
-    description: "نظرة عامة شاملة"
+    description: "نظرة عامة شاملة",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
   },
   {
     id: "campaigns",
@@ -51,7 +71,8 @@ const menuItems = [
     icon: Megaphone,
     badge: "12",
     gradient: "from-pink-500 to-rose-600",
-    description: "إدارة وتتبع الحملات"
+    description: "إدارة وتتبع الحملات",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
   },
   {
     id: "analytics",
@@ -59,7 +80,8 @@ const menuItems = [
     icon: BarChart3,
     badge: "جديد",
     gradient: "from-green-500 to-emerald-600",
-    description: "رؤى وتقارير ذكية"
+    description: "رؤى وتقارير ذكية",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST"]
   },
   {
     id: "clients",
@@ -67,7 +89,8 @@ const menuItems = [
     icon: Users,
     badge: "48",
     gradient: "from-orange-500 to-red-600",
-    description: "نظام CRM متكامل"
+    description: "نظام CRM متكامل",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"]
   },
   {
     id: "ai",
@@ -75,7 +98,8 @@ const menuItems = [
     icon: Brain,
     badge: "AI",
     gradient: "from-purple-500 to-indigo-600",
-    description: "مساعد ذكي متطور"
+    description: "مساعد ذكي متطور",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
   },
   {
     id: "design",
@@ -83,7 +107,53 @@ const menuItems = [
     icon: Palette,
     badge: "Pro",
     gradient: "from-cyan-500 to-blue-600",
-    description: "تصميم بالذكاء الاصطناعي"
+    description: "تصميم بالذكاء الاصطناعي",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
+  },
+  {
+    id: "ai-ads",
+    label: "توليد الإعلانات AI",
+    icon: WandSparkles,
+    badge: "جديد",
+    gradient: "from-purple-500 to-pink-600",
+    description: "إعلانات ذكية مولدة تلقائيًا",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST"]
+  },
+  {
+    id: "market-trends",
+    label: "تحليل السوق",
+    icon: TrendingUp,
+    badge: "AI",
+    gradient: "from-blue-500 to-cyan-600",
+    description: "تحليل ترندات السوق الآلي",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST"]
+  },
+  {
+    id: "smart-targeting",
+    label: "الاستهداف الذكي",
+    icon: Target,
+    badge: "ذكي",
+    gradient: "from-indigo-500 to-purple-600",
+    description: "توصيات استهداف متقدمة",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST"]
+  },
+  {
+    id: "ai-copywriting",
+    label: "النصوص الدعائية AI",
+    icon: FileText,
+    badge: "جديد",
+    gradient: "from-purple-500 to-pink-600",
+    description: "مولد النصوص الذكي",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST"]
+  },
+  {
+    id: "competitor-analysis",
+    label: "تحليل المنافسين",
+    icon: Users,
+    badge: "تحليل",
+    gradient: "from-blue-500 to-indigo-600",
+    description: "مراقبة المنافسين تلقائيًا",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"]
   },
   {
     id: "automation",
@@ -91,7 +161,98 @@ const menuItems = [
     icon: Zap,
     badge: "Beta",
     gradient: "from-yellow-500 to-orange-600",
-    description: "جدولة وأتمتة متقدمة"
+    description: "جدولة وأتمتة متقدمة",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"]
+  },
+  {
+    id: "notifications",
+    label: "الإشعارات",
+    icon: Bell,
+    badge: "3",
+    gradient: "from-red-500 to-pink-600",
+    description: "إدارة الإشعارات",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
+  },
+  {
+    id: "billing",
+    label: "الفواتير",
+    icon: DollarSign,
+    badge: null,
+    gradient: "from-green-500 to-emerald-600",
+    description: "إدارة المدفوعات",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"]
+  },
+  {
+    id: "reports",
+    label: "التقارير",
+    icon: FileText,
+    badge: "5",
+    gradient: "from-blue-500 to-indigo-600",
+    description: "تقارير وتحليلات",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST"]
+  },
+  {
+    id: "rewards",
+    label: "المكافآت",
+    icon: Gift,
+    badge: "جديد",
+    gradient: "from-yellow-500 to-orange-600",
+    description: "نظام المكافآت للمبدعين",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"]
+  },
+  {
+    id: "search",
+    label: "البحث",
+    icon: Search,
+    badge: "AI",
+    gradient: "from-purple-500 to-pink-600",
+    description: "بحث ذكي مع اقتراحات",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
+  },
+  {
+    id: "profile",
+    label: "الملف الشخصي",
+    icon: User,
+    badge: null,
+    gradient: "from-blue-500 to-cyan-600",
+    description: "إدارة الملف الشخصي",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
+  },
+  {
+    id: "settings",
+    label: "الإعدادات",
+    icon: Settings,
+    badge: null,
+    gradient: "from-gray-500 to-slate-600",
+    description: "تخصيص النظام",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"]
+  },
+  {
+    id: "help",
+    label: "المساعدة والدعم",
+    icon: HelpCircle,
+    badge: null,
+    gradient: "from-green-500 to-emerald-600",
+    description: "الدعم الفني والمساعدة",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
+  },
+  {
+    id: "documentation",
+    label: "التوثيق",
+    icon: BookOpen,
+    badge: null,
+    gradient: "from-purple-500 to-pink-600",
+    description: "دليل الاستخدام والمراجع",
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ANALYST", "USER"]
+  },
+  {
+    id: "system-status",
+    label: "حالة النظام",
+    icon: Server,
+    badge: null,
+    gradient: "from-blue-500 to-indigo-600",
+    description: "مراقبة صحة النظام",
+    roles: ["SUPER_ADMIN", "ADMIN"]
   }
 ];
 
@@ -105,6 +266,17 @@ const quickActions = [
 export default function MobileSidebar({ activeTab, onTabChange, isOpen, onToggle }: MobileSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  // Filter menu items based on user role
+  const filteredMenuItems = (() => {
+    if (!user) return [];
+    
+    // Cast user to UserWithRole to access role property
+    const userWithRole = user as UserWithRole;
+    const userRole = userWithRole.role || "USER";
+    return menuItems.filter(item => item.roles.includes(userRole as UserRole));
+  })();
 
   const handleTabChange = (tab: string) => {
     onTabChange(tab);
@@ -220,14 +392,23 @@ export default function MobileSidebar({ activeTab, onTabChange, isOpen, onToggle
                         <Avatar className="w-14 h-14 ring-2 ring-purple-400/50">
                           <AvatarImage src="/api/placeholder/56/56" />
                           <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-600 text-white font-semibold text-lg">
-                            أم
+                            {user?.name ? user.name.charAt(0) : "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-slate-900" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-white text-lg">أحمد محمد</p>
-                        <p className="text-sm text-gray-400">مدير النظام</p>
+                        <p className="font-semibold text-white text-lg">
+                          {user?.name || "مستخدم"}
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          {(user as UserWithRole)?.role === "SUPER_ADMIN" && "مدير عليا"}
+                          {(user as UserWithRole)?.role === "ADMIN" && "مدير النظام"}
+                          {(user as UserWithRole)?.role === "MANAGER" && "مدير"}
+                          {(user as UserWithRole)?.role === "ANALYST" && "محلل"}
+                          {(user as UserWithRole)?.role === "USER" && "مستخدم"}
+                          {!(user as UserWithRole)?.role && "مستخدم"}
+                        </p>
                       </div>
                       <Button
                         variant="ghost"
@@ -254,7 +435,7 @@ export default function MobileSidebar({ activeTab, onTabChange, isOpen, onToggle
                     </h3>
                   </motion.div>
 
-                  {menuItems.map((item, index) => (
+                  {filteredMenuItems.map((item, index) => (
                     <motion.div
                       key={item.id}
                       initial={{ x: -20, opacity: 0 }}

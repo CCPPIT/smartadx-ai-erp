@@ -323,14 +323,104 @@ exports.Prisma.RewardScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.RoleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  level: 'level',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PermissionScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  category: 'category',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.UserRoleScalarFieldEnum = {
+  userId: 'userId',
+  roleId: 'roleId',
+  assignedAt: 'assignedAt'
+};
+
+exports.Prisma.RolePermissionScalarFieldEnum = {
+  roleId: 'roleId',
+  permissionId: 'permissionId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AuthenticationMethodScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  displayName: 'displayName',
+  description: 'description',
+  isActive: 'isActive',
+  config: 'config',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UserAuthMethodScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  authMethodId: 'authMethodId',
+  isPrimary: 'isPrimary',
+  isEnabled: 'isEnabled',
+  config: 'config',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UserSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  authMethod: 'authMethod',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  lastAccessed: 'lastAccessed'
+};
+
+exports.Prisma.AuthAuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  authMethod: 'authMethod',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  success: 'success',
+  failureReason: 'failureReason',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 
@@ -352,7 +442,15 @@ exports.Prisma.ModelName = {
   SocialMediaIntegration: 'SocialMediaIntegration',
   Report: 'Report',
   UserPreference: 'UserPreference',
-  Reward: 'Reward'
+  Reward: 'Reward',
+  Role: 'Role',
+  Permission: 'Permission',
+  UserRole: 'UserRole',
+  RolePermission: 'RolePermission',
+  AuthenticationMethod: 'AuthenticationMethod',
+  UserAuthMethod: 'UserAuthMethod',
+  UserSession: 'UserSession',
+  AuthAuditLog: 'AuthAuditLog'
 };
 
 /**

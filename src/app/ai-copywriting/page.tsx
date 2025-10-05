@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -75,16 +76,14 @@ export default function AICopywritingPage() {
         tone: "professional",
         length: "medium",
       });
-      toast({
-        title: "نجاح",
+      toast("نجاح",{
         description: "تم إنشاء النص الإعلاني بنجاح",
       });
     },
     onError: (error) => {
-      toast({
-        title: "خطأ",
+      toast("خطأ",{
         description: "فشل إنشاء النص الإعلاني: " + error.message,
-        variant: "destructive",
+        // variant: "destructive",
       });
     },
   });
@@ -93,16 +92,15 @@ export default function AICopywritingPage() {
   const deleteCopyMutation = trpc.aiCopywriting.delete.useMutation({
     onSuccess: () => {
       refetch();
-      toast({
-        title: "نجاح",
+      toast("نجاح",{
+
         description: "تم حذف النص الإعلاني بنجاح",
       });
     },
     onError: (error) => {
-      toast({
-        title: "خطأ",
+      toast("خطأ",{
         description: "فشل حذف النص الإعلاني: " + error.message,
-        variant: "destructive",
+        // variant: "destructive",
       });
     },
   });
@@ -139,8 +137,8 @@ export default function AICopywritingPage() {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
-    toast({
-      title: "تم النسخ",
+    toast("تم النسخ",{
+      
       description: "تم نسخ النص إلى الحافظة",
     });
   };

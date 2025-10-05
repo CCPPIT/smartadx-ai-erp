@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Development Application with hot reload
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: smartadx-erp-dev
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=dev-jwt-secret-key-12345
+      - SESSION_SECRET=dev-session-secret-12345
+      - REDIS_URL=redis://redis:6379
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:3001
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - redis
+    networks:
+      - smartadx-network
+    command: npm run dev
+
+  # Redis for development
+  redis:
+    image: redis:7-alpine
+    container_name: smartadx-erp-redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - smartadx-network
+
+networks:
+  smartadx-network:
+    driver: bridge

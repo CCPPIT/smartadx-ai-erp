@@ -17,7 +17,10 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  Search
+  Search,
+  FileText,
+  BarChart3,
+  PieChart
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,14 +33,87 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc-react";
+
+// Define the invoice type
+type Invoice = {
+  id: string;
+  client: string;
+  amount: number;
+  status: 'paid' | 'pending' | 'overdue';
+  date: string;
+  dueDate: string;
+  items: number;
+};
+
+// Invoice detail component
+function InvoiceDetail({ invoice }: { invoice: Invoice }) {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-xl font-bold">{invoice.id}</h3>
+          <p className="text-muted-foreground">فاتورة مفصلة</p>
+        </div>
+        <Badge className={invoice.status === 'paid' ? 'bg-green-500' : invoice.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}>
+          {invoice.status === 'paid' ? 'مدفوع' : invoice.status === 'pending' ? 'معلق' : 'متأخر'}
+        </Badge>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm text-muted-foreground">العميل</p>
+          <p className="font-medium">{invoice.client}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">التاريخ</p>
+          <p className="font-medium">{invoice.date}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">تاريخ الاستحقاق</p>
+          <p className="font-medium">{invoice.dueDate}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">المبلغ الإجمالي</p>
+          <p className="font-medium">${invoice.amount.toLocaleString()}</p>
+        </div>
+      </div>
+      
+      <div>
+        <h4 className="font-semibold mb-2">عناصر الفاتورة</h4>
+        <div className="space-y-2">
+          {[...Array(invoice.items)].map((_, i) => (
+            <div key={i} className="flex justify-between p-2 bg-white/5 rounded">
+              <span>خدمة {i + 1}</span>
+              <span>${(invoice.amount / invoice.items).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="flex gap-2">
+        <Button className="flex-1">
+          <Download className="w-4 h-4 ml-2" />
+          تنزيل الفاتورة
+        </Button>
+        <Button variant="outline">
+          <FileText className="w-4 h-4 ml-2" />
+          طباعة
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function BillingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Mock invoices
-  const invoices = [
+  const invoices: Invoice[] = [
     {
       id: "INV-2025-001",
       client: "شركة التقنية الحديثة",
@@ -116,6 +192,16 @@ export default function BillingPage() {
   const overdueAmount = invoices
     .filter(inv => inv.status === "overdue")
     .reduce((sum, inv) => sum + inv.amount, 0);
+
+  const handleViewInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsDialogOpen(true);
+  };
+
+  const handleDownloadInvoice = (invoiceId: string) => {
+    // Mock download functionality
+    console.log(`Downloading invoice ${invoiceId}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6">
@@ -199,6 +285,37 @@ export default function BillingPage() {
           </Card>
         </div>
 
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="glass-morphism border-white/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                الإيرادات الشهرية
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 flex items-center justify-center bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg">
+                <p className="text-muted-foreground">رسم بياني للميرادات</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="glass-morphism border-white/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="w-5 h-5" />
+                توزيع الحالات
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 flex items-center justify-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg">
+                <p className="text-muted-foreground">رسم بياني لتوزيع الحالات</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Filters and Search */}
         <Card className="glass-morphism border-white/20">
           <CardContent className="p-6">
@@ -271,11 +388,22 @@ export default function BillingPage() {
                       <td className="py-4 px-4">{getStatusBadge(invoice.status)}</td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleViewInvoice(invoice)}
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm">
                             <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDownloadInvoice(invoice.id)}
+                          >
+                            <Download className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm">
                             <Trash2 className="w-4 h-4" />
@@ -353,6 +481,16 @@ export default function BillingPage() {
           </CardContent>
         </Card>
       </motion.div>
+      
+      {/* Invoice Detail Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>تفاصيل الفاتورة</DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && <InvoiceDetail invoice={selectedInvoice} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
